@@ -20,6 +20,7 @@ import csv
 from flask import Flask, request, make_response
 from werkzeug.utils import secure_filename
 
+WEIGHTS_PATH = './checkpoints/yolov4-416'
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
                     'path to weights file')
@@ -59,7 +60,7 @@ def print_result(wr, counted_classes):
             print("Number of {}s: {}".format(key, value))
             wr.writerow([key, value])
 
-def show_result(images_data, original_image, interpreter):
+def show_result(images_data, original_image):
     infer = saved_model_loaded.signatures['serving_default']
     batch_data = tf.constant(images_data)
     pred_bbox = infer(batch_data)
@@ -131,7 +132,7 @@ def health_check():
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
-saved_model_loaded = tf.saved_model.load(FLAGS.weights, tags=[tag_constants.SERVING])
+saved_model_loaded = tf.saved_model.load(WEIGHTS_PATH, tags=[tag_constants.SERVING])
 
 @app.route('/process', methods=['GET'])
 def process_image():
@@ -145,7 +146,7 @@ def process_image():
     result = {}
     if request.args.get('yolo') is not None:
         images_data, original_image = to_images_data(images)
-        result = show_result(images_data, original_image, interpreter)
+        result = show_result(images_data, original_image)
     return make_response(result, 200)
 
 if __name__=='__main__':
