@@ -1,0 +1,5 @@
+.tmp.driveupload
+__pycache__
+venv
+yolo.zip
+token.txt
